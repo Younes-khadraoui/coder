@@ -1,8 +1,9 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,24 +18,43 @@ import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
   prompt: z.string().min(2).max(50),
-  features: z.array(z.string().min(2).max(50)),
-  techs: z.array(z.string().min(2).max(50)),
-  description: z.string().min(2).max(50),
+  features: z.string().min(2).max(50),
+  techs: z.string().min(2).max(50),
 });
 
 const ChatForm = () => {
+  const [loading, setLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      features: [],
-      techs: [],
-      description: "",
+      features: "",
+      techs: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("prompt", values.prompt);
+      formData.append("features", values.features);
+      formData.append("techs", values.techs);
+      const response = await axios.post(
+        "http://localhost:8000/submit_form",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
   }
   return (
     <Form {...form}>
@@ -44,9 +64,9 @@ const ChatForm = () => {
           name="prompt"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xl">prompt</FormLabel>
+              <FormLabel className="text-xl">Prompt</FormLabel>
               <FormControl>
-                <Input placeholder="Add your prompt" {...field} />
+                <Input placeholder="Make an app ..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -57,9 +77,22 @@ const ChatForm = () => {
           name="features"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xl">features</FormLabel>
+              <FormLabel className="text-xl">Features</FormLabel>
               <FormControl>
-                <Input placeholder="Add your features" {...field} />
+                <Input placeholder="Feature 1, Feature 2 ..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="techs"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xl">Tech Stack</FormLabel>
+              <FormControl>
+                <Input placeholder="Tech 1, Tech 2 ..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,6 +100,7 @@ const ChatForm = () => {
         />
         <Button type="submit">Submit</Button>
       </form>
+      {loading && <div className="text-xl">Loading...</div>}
     </Form>
   );
 };
