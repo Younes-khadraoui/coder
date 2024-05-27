@@ -1,9 +1,11 @@
 "use client";
-import React, { useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useStore } from "@/stores/response";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import React, { useState } from "react";
 import axios from "axios";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +26,7 @@ const formSchema = z.object({
 
 const ChatForm = () => {
   const [loading, setLoading] = useState(false);
+  const updateInstructions = useStore((state) => state.updateInstructions);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,7 +53,7 @@ const ChatForm = () => {
           },
         }
       );
-      console.log(response.data);
+      updateInstructions(response.data.content);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -99,8 +102,8 @@ const ChatForm = () => {
           )}
         />
         <Button type="submit">Submit</Button>
+        {loading && <div className="text-xl">Loading...</div>}
       </form>
-      {loading && <div className="text-xl">Loading...</div>}
     </Form>
   );
 };
