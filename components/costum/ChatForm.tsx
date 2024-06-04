@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useStore } from "@/stores/response";
 import { useForm } from "react-hook-form";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/costum/Loader";
 import axios from "axios";
 import { z } from "zod";
 
@@ -25,8 +27,9 @@ const formSchema = z.object({
 });
 
 const ChatForm = () => {
-  const [loading, setLoading] = useState(false);
   const updateInstructions = useStore((state) => state.updateInstructions);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,57 +57,66 @@ const ChatForm = () => {
         }
       );
       updateInstructions(response.data.content);
-      setLoading(false);
+      router.push("/instructions");
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-96">
-        <FormField
-          control={form.control}
-          name="prompt"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xl">Prompt</FormLabel>
-              <FormControl>
-                <Input placeholder="Make an app ..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="features"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xl">Features</FormLabel>
-              <FormControl>
-                <Input placeholder="Feature 1, Feature 2 ..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="techs"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xl">Tech Stack</FormLabel>
-              <FormControl>
-                <Input placeholder="Tech 1, Tech 2 ..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
-        {loading && <div className="text-xl">Loading...</div>}
-      </form>
-    </Form>
+    <>
+      {loading && <Loader />}
+      {!loading && (
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-8 w-96"
+          >
+            <FormField
+              control={form.control}
+              name="prompt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xl">Prompt</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Make an app ..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="features"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xl">Features</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Feature 1, Feature 2 ..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="techs"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xl">Tech Stack</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Tech 1, Tech 2 ..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Submit</Button>
+          </form>
+        </Form>
+      )}
+    </>
   );
 };
 
